@@ -13,12 +13,12 @@ const Signup = (props) => {
     e.preventDefault();
     
     try {
-      const response1 = await axios.post(`http://localhost:8090/api/users/createuser`, { name: credentials.name, email: credentials.email, password: credentials.password });
+      const response1 = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/users/createuser`, { name: credentials.name, email: credentials.email, password: credentials.password });
       const user_cred = {
         username: credentials.email,
         password: credentials.password
       }
-      const response = await axios.post('http://localhost:8090/authenticate', user_cred);
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/authenticate`, user_cred);
   
       localStorage.setItem('token', response.data.jwt)
       navigate('/');

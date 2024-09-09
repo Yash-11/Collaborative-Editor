@@ -15,7 +15,7 @@ const Login = (props) => {
     }
 
     try {
-      const response = await axios.post('http://localhost:8090/authenticate', user_cred);
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/authenticate`, user_cred);
       console.log(response.data);
 
       localStorage.setItem('token', response.data.jwt)

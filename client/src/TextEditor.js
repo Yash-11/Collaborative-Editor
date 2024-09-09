@@ -24,7 +24,7 @@ const getDeltaSent = () => {
 var deltaSent = null;
 
 
-const SOCKET_URL = 'http://localhost:8090/ws-message';
+const SOCKET_URL = `${process.env.REACT_APP_API_BASE_URL}/ws-message`;
 
 const getClientId = () => {
   let clientId = sessionStorage.getItem("clientId");
@@ -65,7 +65,7 @@ export default function TextEditor() {
 
     var recipientEmail = window.prompt("Enter recipient email");
     try {
-      const response = await axios.post(`http://localhost:8090/sendinvite`,
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/sendinvite`,
         {
           recipientEmail: recipientEmail,
           documentId: documentId,
@@ -135,7 +135,7 @@ export default function TextEditor() {
         }
       });
 
-      const response = await axios.get(`http://localhost:8090/get-doc/${documentId}`,
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/get-doc/${documentId}`,
         {
           headers: {
             "Authorization": "Bearer " + localStorage.getItem('token')

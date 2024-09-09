@@ -11,7 +11,7 @@ const NoteState = (props)=>{
     const [invites, setInvites] = useState(invitesInitial)
     const [user, setUser] = useState(usr)
     const getNotes = async ()=>{
-        const response = await axios.get(`http://localhost:8090/fetchallnotes`, 
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/fetchallnotes`, 
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
                       }});
@@ -20,7 +20,7 @@ const NoteState = (props)=>{
     }
 
     const getInvites = async ()=>{
-        const response = await axios.get(`http://localhost:8090/fetchallinvites`, 
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/fetchallinvites`, 
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
                       }});
@@ -30,7 +30,7 @@ const NoteState = (props)=>{
 
     const acceptInvite = async (invite)=>{
 
-        const response = await axios.post(`http://localhost:8090/acceptinvite`, 
+        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/acceptinvite`, 
             invite,
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
@@ -44,7 +44,7 @@ const NoteState = (props)=>{
 
     const declineInvite = async (invite)=>{
 
-        const response = await axios.post(`http://localhost:8090/declineinvite`, 
+        const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/declineinvite`, 
             invite,
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
@@ -73,7 +73,7 @@ const NoteState = (props)=>{
     //delete a note
     const deleteNote = async (id)=>{
 
-        const response = await axios.delete(`http://localhost:8090/deletenote/${id}`, 
+        const response = await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/deletenote/${id}`, 
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
                       }});

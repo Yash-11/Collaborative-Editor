@@ -36,7 +36,7 @@ const Home = (props) => {
         var etitle = window.prompt("Enter Page Title")
         
         const documentId = uuidV4();
-        await axios.post(`http://localhost:8090/create-doc/${documentId}`, { title: etitle },
+        await axios.post(`${process.env.REACT_APP_API_BASE_URL}/create-doc/${documentId}`, { title: etitle },
             {headers: {
                             "Authorization": "Bearer "+localStorage.getItem('token')
                       }});
