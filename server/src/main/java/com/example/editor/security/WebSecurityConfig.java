@@ -43,6 +43,7 @@ public class WebSecurityConfig  {
     }
 
     private static final String[] WHITELIST = {
+        "/",
         "/authenticate/**",
         "api/users/createuser",
         "/ws-message/**",

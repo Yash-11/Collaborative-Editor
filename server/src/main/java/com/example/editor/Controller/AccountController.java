@@ -20,7 +20,6 @@ import com.example.editor.security.JwtUtil;
 import com.example.editor.services.CustomUserDetailsService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 public class AccountController {
 
     @Autowired

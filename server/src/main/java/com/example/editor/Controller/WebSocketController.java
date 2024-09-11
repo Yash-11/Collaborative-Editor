@@ -47,6 +47,11 @@ public class WebSocketController {
 	@Autowired
 	UserService userService;
 
+	@GetMapping("/")
+	public ResponseEntity<?> gethome() {
+		return ResponseEntity.ok("Hello World!");
+	}
+
 	@PostMapping("/create-doc/{docID}")
 	public ResponseEntity<?> postMethodName(@RequestBody CreateDocumentDTO createDocumentDTO, @PathVariable String docID, Authentication authentication) {
 		

@@ -15,7 +15,6 @@ import com.example.editor.services.UserService;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/users")
 public class UserController {
 
