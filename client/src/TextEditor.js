@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
 var messageQueue = [];
+let subscription;
 
 const getDeltaSent = () => {
   let deltaSent = sessionStorage.getItem("deltaSent");
@@ -58,7 +59,7 @@ export default function TextEditor() {
   const { user, fetchUser, getNote } = getContext;
   const [title, setTitle] = useState("");
 
-  let navigate = useNavigate();
+  let navigate = useNavigate(); 
 
   const sendinvite = async () => {
 
@@ -105,15 +106,108 @@ export default function TextEditor() {
 
     setQuill(q);
 
+    // const socket1 = new SockJS(SOCKET_URL);
+    // const client = Stomp.over(socket1);
+
+    // async function onConnected(frame) {
+    //   console.log("Connected!!")
+
+    //   console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
+
+    //   subscription = client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
+
+    //     console.log("receiving changes");
+    //     if (msg.body) {
+    //       var jsonBody = JSON.parse(msg.body);
+
+    //       // console.log("clientId: " + clientId);
+    //       // console.log("message from clientId: " + jsonBody.clientId);
+    //       if (clientId !== jsonBody.clientId) {
+    //         // console.log("updating quill");
+    //         // console.log("deltaReceive");
+
+    //         var deltaReceive = jsonBody.delta;
+    //         // console.log("deltasent");
+    //         // console.log(deltaSent);
+
+    //         if (deltaSent != null) {
+    //           // console.log("transformation applied");
+    //           deltaReceive = deltaSent.transform(deltaReceive, false);
+    //           // console.log("deltaReceive");
+    //           // console.log(deltaReceive);
+    //           // console.log("deltaSent");
+    //           // console.log(deltaSent);
+    //         }
+
+
+    //         q.updateContents(deltaReceive);
+    //         q.setSelection(q.getLength() - 1);
+    //       } else {
+    //         q.enable(true)
+    //         q.setSelection(q.getLength() - 1)
+    //         deltaSent = null;
+    //         // processNextMessage();
+    //         if (messageQueue.length > 0) {
+    //           messageQueue.shift();
+    //           if (messageQueue.length > 0) {
+    //             client.send("/app/send-changes", {}, JSON.stringify(messageQueue[0]));
+    //           }
+    //         } 
+    //       }
+    //     }
+    //   });
+
+    //   const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/get-doc/${documentId}`,
+    //     {
+    //       headers: {
+    //         "Authorization": "Bearer " + localStorage.getItem('token')
+    //       }
+    //     });
+    //   console.log(response.data);
+    //   for (const element of response.data.doc) {
+    //     q.updateContents(element);
+    //   }
+
+    //   q.enable()
+    //   console.log("title:" + response.data.title);
+
+    //   if (!response.data.title || response.data.title === "") {
+
+    //     var etitle = window.prompt("Enter Page Title")
+    //     setTitle(etitle)
+    //   } else {
+    //     setTitle(response.data.title)
+    //   }
+    // }
+   
+
+    // // Connect with JWT token in headers
+    // client.connect(
+    //   { "Authorization": 'Bearer ' + localStorage.getItem('token') }, // Pass the JWT token as an Authorization header
+    //   async (frame) => {
+    //     await onConnected(frame);
+    //   },
+    //   function (error) {}
+    // );
+
+    // setSocket(client);
+
+    // return () => {
+    //   subscription.unsubscribe();
+    // }
+  }, [])
+
+  useEffect(() => {
+    if (quill == null) return;
+    
     const socket1 = new SockJS(SOCKET_URL);
     const client = Stomp.over(socket1);
 
     async function onConnected(frame) {
-      console.log("Connected!!")
 
-      console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
+      // console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
 
-      client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
+      subscription = client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
 
         console.log("receiving changes");
         if (msg.body) {
@@ -139,17 +233,17 @@ export default function TextEditor() {
             }
 
 
-            q.updateContents(deltaReceive);
-            q.setSelection(q.getLength() - 1);
+            quill.updateContents(deltaReceive);
+            quill.setSelection(quill.getLength() - 1);
           } else {
-            q.enable(true)
-            q.setSelection(q.getLength() - 1)
+            quill.enable(true)
+            quill.setSelection(quill.getLength() - 1)
             deltaSent = null;
             // processNextMessage();
             if (messageQueue.length > 0) {
               messageQueue.shift();
               if (messageQueue.length > 0) {
-                client.send("/app/send-changes", {}, JSON.stringify(messageQueue.shift()));
+                client.send("/app/send-changes", {}, JSON.stringify(messageQueue[0]));
               }
             } 
           }
@@ -164,10 +258,10 @@ export default function TextEditor() {
         });
       console.log(response.data);
       for (const element of response.data.doc) {
-        q.updateContents(element);
+        quill.updateContents(element);
       }
 
-      q.enable()
+      quill.enable()
       console.log("title:" + response.data.title);
 
       if (!response.data.title || response.data.title === "") {
@@ -179,7 +273,7 @@ export default function TextEditor() {
       }
     }
    
-
+  
     // Connect with JWT token in headers
     client.connect(
       { "Authorization": 'Bearer ' + localStorage.getItem('token') }, // Pass the JWT token as an Authorization header
@@ -190,8 +284,11 @@ export default function TextEditor() {
     );
 
     setSocket(client);
-  }, [])
 
+    return () => {
+      subscription.unsubscribe();
+    }
+  }, [quill])
 
   useEffect(() => {
     if (quill == null || socket == null) return
@@ -216,12 +313,14 @@ export default function TextEditor() {
         delta: delta
       });
     }
-    quill.on("text-change", handler)
+    quill.on("text-change", handler);
+    console.log("text-change handler set");
+    
 
     return () => {
       quill.off("text-change", handler)
     }
-  }, [quill])
+  }, [quill, socket])
 
   return (
     <>
