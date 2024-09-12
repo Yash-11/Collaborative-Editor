@@ -156,7 +156,7 @@ public class WebSocketController {
 			return;
 		}
 		String username = principal.getName();
-
+		
 		String documentId = textChangeDTO.getDocumentId();
 		Object delta = textChangeDTO.getDelta();
 		System.err.println("changes from id: "+documentId);
@@ -173,6 +173,7 @@ public class WebSocketController {
 
 			userService.addDocument(document, username);
 			documentService.save(document);
+			System.out.println("change saved");
 		} else {
 			throw new RuntimeException("document not found");
 		}

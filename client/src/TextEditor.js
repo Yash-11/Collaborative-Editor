@@ -9,11 +9,7 @@ import noteContext from './context/notes/noteContext'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
-// const QuillCursors = require('quill-cursors')
-// const Delta = Quill.import('delta');
-
-var isSending = false;
-const messageQueue = [];
+var messageQueue = [];
 
 const getDeltaSent = () => {
   let deltaSent = sessionStorage.getItem("deltaSent");
@@ -84,27 +80,14 @@ export default function TextEditor() {
   }
 
   const sendMessage = (message) => {
+    console.log("socket: "+socket);
 
-    if (!isSending) {
-      deltaSent = message.delta;
+    messageQueue.push(message);
+    console.log("messageQueue.length "+messageQueue.length);
+    
+    
+    if (messageQueue.length == 1) {
       socket.send("/app/send-changes", {}, JSON.stringify(message));
-      isSending = true;
-    } else {
-      console.log("pushing to queue");
-      messageQueue.push(message);
-    }
-  };
-
-  const processNextMessage = () => {
-    if (messageQueue.length > 0) {
-      messageQueue.shift(); // Remove the first message
-      if (messageQueue.length > 0) {
-        sendMessage(messageQueue[0]);
-      } else {
-        isSending = false; // No more messages to send
-      }
-    } else {
-      isSending = false; // No more messages to send
     }
   };
 
@@ -122,34 +105,37 @@ export default function TextEditor() {
 
     setQuill(q);
 
+    const socket1 = new SockJS(SOCKET_URL);
+    const client = Stomp.over(socket1);
+
     async function onConnected(frame) {
       console.log("Connected!!")
 
       console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
 
-      client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {
+      client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
 
         console.log("receiving changes");
         if (msg.body) {
           var jsonBody = JSON.parse(msg.body);
 
-          console.log("clientId: " + clientId);
-          console.log("message from clientId: " + jsonBody.clientId);
+          // console.log("clientId: " + clientId);
+          // console.log("message from clientId: " + jsonBody.clientId);
           if (clientId !== jsonBody.clientId) {
-            console.log("updating quill");
-            console.log("deltaReceive");
+            // console.log("updating quill");
+            // console.log("deltaReceive");
 
             var deltaReceive = jsonBody.delta;
-            console.log("deltasent");
-            console.log(deltaSent);
+            // console.log("deltasent");
+            // console.log(deltaSent);
 
             if (deltaSent != null) {
-              console.log("transformation applied");
+              // console.log("transformation applied");
               deltaReceive = deltaSent.transform(deltaReceive, false);
-              console.log("deltaReceive");
-              console.log(deltaReceive);
-              console.log("deltaSent");
-              console.log(deltaSent);
+              // console.log("deltaReceive");
+              // console.log(deltaReceive);
+              // console.log("deltaSent");
+              // console.log(deltaSent);
             }
 
 
@@ -159,7 +145,13 @@ export default function TextEditor() {
             q.enable(true)
             q.setSelection(q.getLength() - 1)
             deltaSent = null;
-            processNextMessage();
+            // processNextMessage();
+            if (messageQueue.length > 0) {
+              messageQueue.shift();
+              if (messageQueue.length > 0) {
+                client.send("/app/send-changes", {}, JSON.stringify(messageQueue.shift()));
+              }
+            } 
           }
         }
       });
@@ -185,26 +177,8 @@ export default function TextEditor() {
       } else {
         setTitle(response.data.title)
       }
-
-
-
-      client.subscribe(`/topic/load-document/${documentId}`, function (msg) {
-        console.log("receiving changes");
-        if (msg.body) {
-          var jsonBody = JSON.parse(msg.body);
-          q.setContents(jsonBody.document)
-          q.enable()
-          setTitle(jsonBody.headline)
-        }
-      })
     }
-
-    let onDisconnected = () => {
-      console.log("Disconnected!!")
-    }
-
-    const socket1 = new SockJS(SOCKET_URL);
-    const client = Stomp.over(socket1);
+   
 
     // Connect with JWT token in headers
     client.connect(
@@ -241,36 +215,13 @@ export default function TextEditor() {
         documentId: documentId,
         delta: delta
       });
-      try {
-
-        // quill.enable(false);
-        // socket.send("/app/send-changes", {}, JSON.stringify({
-        //   clientId: clientId,
-        //   documentId: documentId,
-        //   delta: delta
-        // }))
-        // function sendmess(){
-        //   socket.send("/app/send-changes", {}, JSON.stringify({
-        //     clientId: clientId,
-        //     documentId: documentId,
-        //     delta: delta
-        //   }))
-
-        // }
-
-        // setTimeout(sendmess, 3000);
-
-
-      } catch (error) {
-        console.error("Error publishing message:", error);
-      }
     }
     quill.on("text-change", handler)
 
     return () => {
       quill.off("text-change", handler)
     }
-  }, [quill, socket])
+  }, [quill])
 
   return (
     <>
