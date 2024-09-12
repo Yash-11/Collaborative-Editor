@@ -9,8 +9,11 @@ import noteContext from './context/notes/noteContext'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
-const QuillCursors = require('quill-cursors')
-const Delta = Quill.import('delta');
+// const QuillCursors = require('quill-cursors')
+// const Delta = Quill.import('delta');
+
+var isSending = false;
+const messageQueue = [];
 
 const getDeltaSent = () => {
   let deltaSent = sessionStorage.getItem("deltaSent");
@@ -80,6 +83,31 @@ export default function TextEditor() {
     }
   }
 
+  const sendMessage = (message) => {
+
+    if (!isSending) {
+      deltaSent = message.delta;
+      socket.send("/app/send-changes", {}, JSON.stringify(message));
+      isSending = true;
+    } else {
+      console.log("pushing to queue");
+      messageQueue.push(message);
+    }
+  };
+
+  const processNextMessage = () => {
+    if (messageQueue.length > 0) {
+      messageQueue.shift(); // Remove the first message
+      if (messageQueue.length > 0) {
+        sendMessage(messageQueue[0]);
+      } else {
+        isSending = false; // No more messages to send
+      }
+    } else {
+      isSending = false; // No more messages to send
+    }
+  };
+
   const wrapperRef = useCallback(wrapper => {
 
     if (wrapper == null) return
@@ -131,6 +159,7 @@ export default function TextEditor() {
             q.enable(true)
             q.setSelection(q.getLength() - 1)
             deltaSent = null;
+            processNextMessage();
           }
         }
       });
@@ -207,16 +236,19 @@ export default function TextEditor() {
         console.error("WebSocket is not connected.");
         return;
       }
+      sendMessage({
+        clientId: clientId,
+        documentId: documentId,
+        delta: delta
+      });
       try {
 
-        deltaSent = delta;
-
-        quill.enable(false);
-        socket.send("/app/send-changes", {}, JSON.stringify({
-          clientId: clientId,
-          documentId: documentId,
-          delta: delta
-        }))
+        // quill.enable(false);
+        // socket.send("/app/send-changes", {}, JSON.stringify({
+        //   clientId: clientId,
+        //   documentId: documentId,
+        //   delta: delta
+        // }))
         // function sendmess(){
         //   socket.send("/app/send-changes", {}, JSON.stringify({
         //     clientId: clientId,
