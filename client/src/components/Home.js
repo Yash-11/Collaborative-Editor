@@ -61,24 +61,27 @@ const Home = (props) => {
                 <div className="row my-3">
                     <h1>Invites </h1>
                 </div>
-                {
+                {invites.length > 0 ? (
                     invites.map((invite) => {
-                        return <InviteItem key={invite.id} invite={invite}/>
-                        
+                        return <InviteItem key={invite.id} invite={invite} />
                     })
-                }
+                ) : (
+                    <p className="ms-3">No invites.</p>
+                )}
             </div>
 
             <div className='container'>
                 <div className="row my-3">
                     <h1>Your Notes </h1>
                 </div>
-                {
+                {notes.length > 0 ? (
                     notes.map((note) => {
                         return <Noteitem key={note.id} note={note} updateNote={updateNote}/>
                         
                     })
-                }
+                ) : (
+                    <p className="ms-3">No documents.</p>
+                )}
             </div>
         </div>
     )
