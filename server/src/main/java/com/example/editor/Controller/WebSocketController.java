@@ -186,5 +186,10 @@ public class WebSocketController {
 	public TextMessageDTO broadcastMessage(@Payload TextMessageDTO textMessageDTO) {
 		return textMessageDTO;
 	}
+
+	@MessageMapping("/test")
+	public void testMessage() {
+		template.convertAndSend("/topic/test-receive/", "websocket ok");
+	}
 }
 

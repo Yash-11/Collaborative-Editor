@@ -18,6 +18,9 @@ import com.example.editor.dto.AuthenticationRequest;
 import com.example.editor.dto.UserDTO;
 import com.example.editor.security.JwtUtil;
 import com.example.editor.services.CustomUserDetailsService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 public class AccountController {
@@ -58,5 +61,11 @@ public class AccountController {
         userDTO.setJwt(jwt);
         return ResponseEntity.ok(userDTO);
     }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        return ResponseEntity.ok("test ok");
+    }
+    
 
 }

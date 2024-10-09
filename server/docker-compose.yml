@@ -1,0 +1,11 @@
+services:
+  app:
+    image: aysh1/editor:1.4
+    container_name: contestplatform
+    environment:
+        AllowedOrigin: https://capable-cobbler-0d204a.netlify.app/
+        DB: mydatabase
+        DB_URI: mongodb+srv://dbyash:pass@cluster0.tsoke.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+        PORT: 8080
+    ports:
+        - "8080:8080"

@@ -47,6 +47,7 @@ public class WebSecurityConfig  {
         "/authenticate/**",
         "api/users/createuser",
         "/ws-message/**",
+        "/test",
         "/login",
         "/register_patient",
         "/register_doctor",
