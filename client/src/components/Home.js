@@ -33,7 +33,8 @@ const Home = (props) => {
     }, [])
     const handle = async () => {
         
-        var etitle = window.prompt("Enter Page Title")
+        var etitle = window.prompt("Enter Page Title");
+        if (!etitle) return;
         
         const documentId = uuidV4();
         await axios.post(`${process.env.REACT_APP_API_BASE_URL}/create-doc/${documentId}`, { title: etitle },
@@ -57,7 +58,7 @@ const Home = (props) => {
                     </button>
                 </div>
             </div>
-            <div className='container'>
+            <div className='container mx-4'>
                 <div className="row my-3">
                     <h1>Invites </h1>
                 </div>
@@ -70,7 +71,7 @@ const Home = (props) => {
                 )}
             </div>
 
-            <div className='container'>
+            <div className='container mx-4'>
                 <div className="row my-3">
                     <h1>Your Notes </h1>
                 </div>

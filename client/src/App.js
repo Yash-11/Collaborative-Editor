@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login"
 import Signup from "./components/Signup"
 import NoteState from "./context/notes/NoteState";
+import SocketTest from "./components/SocketTest";
 import { useState } from "react";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route exact path='/documents/:id' element={<TextEditor />} />
             <Route exact path="/login" element={<Login />} />
             <Route exact path="/signup" element={<Signup showAlert />} />
+            <Route exact path="/sockettest" element={<SocketTest/>} />
           </Routes>
         </BrowserRouter>
       </NoteState>

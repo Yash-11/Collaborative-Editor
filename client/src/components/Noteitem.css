@@ -1,0 +1,12 @@
+.note-title {
+    font-size: large;
+    text-transform: capitalize;
+}
+
+.trash-icon{
+    color: red
+}
+
+.file-lines-icon {
+    color: blue;
+}

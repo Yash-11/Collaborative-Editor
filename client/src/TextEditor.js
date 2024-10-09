@@ -1,6 +1,6 @@
 import Stomp from 'stompjs';
 import SockJS from 'sockjs-client';
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import Quill from 'quill'
 
 import 'quill/dist/quill.snow.css'
@@ -8,20 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import noteContext from './context/notes/noteContext'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
-
-var messageQueue = [];
-let subscription;
-
-const getDeltaSent = () => {
-  let deltaSent = sessionStorage.getItem("deltaSent");
-  if (!deltaSent) {
-    deltaSent = null;
-    sessionStorage.setItem("deltaSent", deltaSent);
-  }
-  return deltaSent;
-};
-
-var deltaSent = null;
+import './TextEditor.css'
 
 
 const SOCKET_URL = `${process.env.REACT_APP_API_BASE_URL}/ws-message`;
@@ -54,6 +41,10 @@ const TOOLBAR_OPTIONS = [
 export default function TextEditor() {
   const [socket, setSocket] = useState()
   const [quill, setQuill] = useState()
+  const messageQueue = useRef([]);
+  const subscription = useRef();
+  const deltaSent = useRef(null);
+
   const { id: documentId } = useParams()
   const getContext = useContext(noteContext);
   const { user, fetchUser, getNote } = getContext;
@@ -83,11 +74,11 @@ export default function TextEditor() {
   const sendMessage = (message) => {
     console.log("socket: "+socket);
 
-    messageQueue.push(message);
-    console.log("messageQueue.length "+messageQueue.length);
+    messageQueue.current.push(message);
+    console.log("messageQueue.length "+messageQueue.current.length);
     
     
-    if (messageQueue.length == 1) {
+    if (messageQueue.current.length == 1) {
       socket.send("/app/send-changes", {}, JSON.stringify(message));
     }
   };
@@ -105,96 +96,6 @@ export default function TextEditor() {
     })
 
     setQuill(q);
-
-    // const socket1 = new SockJS(SOCKET_URL);
-    // const client = Stomp.over(socket1);
-
-    // async function onConnected(frame) {
-    //   console.log("Connected!!")
-
-    //   console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
-
-    //   subscription = client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
-
-    //     console.log("receiving changes");
-    //     if (msg.body) {
-    //       var jsonBody = JSON.parse(msg.body);
-
-    //       // console.log("clientId: " + clientId);
-    //       // console.log("message from clientId: " + jsonBody.clientId);
-    //       if (clientId !== jsonBody.clientId) {
-    //         // console.log("updating quill");
-    //         // console.log("deltaReceive");
-
-    //         var deltaReceive = jsonBody.delta;
-    //         // console.log("deltasent");
-    //         // console.log(deltaSent);
-
-    //         if (deltaSent != null) {
-    //           // console.log("transformation applied");
-    //           deltaReceive = deltaSent.transform(deltaReceive, false);
-    //           // console.log("deltaReceive");
-    //           // console.log(deltaReceive);
-    //           // console.log("deltaSent");
-    //           // console.log(deltaSent);
-    //         }
-
-
-    //         q.updateContents(deltaReceive);
-    //         q.setSelection(q.getLength() - 1);
-    //       } else {
-    //         q.enable(true)
-    //         q.setSelection(q.getLength() - 1)
-    //         deltaSent = null;
-    //         // processNextMessage();
-    //         if (messageQueue.length > 0) {
-    //           messageQueue.shift();
-    //           if (messageQueue.length > 0) {
-    //             client.send("/app/send-changes", {}, JSON.stringify(messageQueue[0]));
-    //           }
-    //         } 
-    //       }
-    //     }
-    //   });
-
-    //   const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/get-doc/${documentId}`,
-    //     {
-    //       headers: {
-    //         "Authorization": "Bearer " + localStorage.getItem('token')
-    //       }
-    //     });
-    //   console.log(response.data);
-    //   for (const element of response.data.doc) {
-    //     q.updateContents(element);
-    //   }
-
-    //   q.enable()
-    //   console.log("title:" + response.data.title);
-
-    //   if (!response.data.title || response.data.title === "") {
-
-    //     var etitle = window.prompt("Enter Page Title")
-    //     setTitle(etitle)
-    //   } else {
-    //     setTitle(response.data.title)
-    //   }
-    // }
-   
-
-    // // Connect with JWT token in headers
-    // client.connect(
-    //   { "Authorization": 'Bearer ' + localStorage.getItem('token') }, // Pass the JWT token as an Authorization header
-    //   async (frame) => {
-    //     await onConnected(frame);
-    //   },
-    //   function (error) {}
-    // );
-
-    // setSocket(client);
-
-    // return () => {
-    //   subscription.unsubscribe();
-    // }
   }, [])
 
   useEffect(() => {
@@ -207,7 +108,7 @@ export default function TextEditor() {
 
       // console.log("subscribing to" + `/topic/receive-changes/${documentId}`);
 
-      subscription = client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
+      subscription.current = client.subscribe(`/topic/receive-changes/${documentId}`, function (msg) {        
 
         console.log("receiving changes");
         if (msg.body) {
@@ -220,16 +121,10 @@ export default function TextEditor() {
             // console.log("deltaReceive");
 
             var deltaReceive = jsonBody.delta;
-            // console.log("deltasent");
-            // console.log(deltaSent);
 
-            if (deltaSent != null) {
+            if (deltaSent.current != null) {
               // console.log("transformation applied");
-              deltaReceive = deltaSent.transform(deltaReceive, false);
-              // console.log("deltaReceive");
-              // console.log(deltaReceive);
-              // console.log("deltaSent");
-              // console.log(deltaSent);
+              deltaReceive = deltaSent.current.transform(deltaReceive, false);
             }
 
 
@@ -238,12 +133,12 @@ export default function TextEditor() {
           } else {
             quill.enable(true)
             quill.setSelection(quill.getLength() - 1)
-            deltaSent = null;
+            deltaSent.current = null;
             // processNextMessage();
-            if (messageQueue.length > 0) {
-              messageQueue.shift();
-              if (messageQueue.length > 0) {
-                client.send("/app/send-changes", {}, JSON.stringify(messageQueue[0]));
+            if (messageQueue.current.length > 0) {
+              messageQueue.current.shift();
+              if (messageQueue.current.length > 0) {
+                client.send("/app/send-changes", {}, JSON.stringify(messageQueue.current[0]));
               }
             } 
           }
@@ -286,7 +181,7 @@ export default function TextEditor() {
     setSocket(client);
 
     return () => {
-      subscription.unsubscribe();
+      subscription.current.unsubscribe();
     }
   }, [quill])
 
@@ -326,7 +221,7 @@ export default function TextEditor() {
     <>
       <div className='container mt-2'>
         <div className="d-flex flex-row justify-content-between input-group mb-3">
-          <h4 className=''>{title}</h4>
+          <div className='doc-title'>{title}</div>
           <button onClick={sendinvite}>Send Invite</button>
         </div>
       </div>
